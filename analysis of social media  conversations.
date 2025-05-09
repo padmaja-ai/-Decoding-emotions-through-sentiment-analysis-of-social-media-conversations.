@@ -1,0 +1,67 @@
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+import spacy
+
+# Download necessary NLTK resources (run once)
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+
+nlp = spacy.load("en_core_web_sm")
+stop_words = set(stopwords.words('english'))
+stemmer = PorterStemmer()
+lemmatizer = WordNetLemmatizer()
+
+def preprocess_text(text):
+    text = text.lower()
+    text = re.sub(r'http\S+|www\S+|@\S+|#\S+', '', text) # Remove URLs, mentions, hashtags
+    text = re.sub(r'[^\w\s]', '', text) # Remove punctuation
+    tokens = nltk.word_tokenize(text)
+    tokens = [token for token in tokens if token not in stop_words]
+    # Apply stemming or lemmatization (choose one)
+    # tokens = [stemmer.stem(token) for token in tokens]
+    tokens = [lemmatizer.lemmatize(token) for token in tokens]
+    return " ".join(tokens)
+
+sample_text = "OMG! This movie was absolutely amazing!!! #MustWatch 😊 https://example.com @user123"
+processed_text = preprocess_text(sample_text)
+print(f"Original text: {sample_text}")
+print(f"Processed text: {processed_text}")
+
+def preprocess_text_spacy(text):
+    text = text.lower()
+    text = re.sub(r'http\S+|www\S+|@\S+|#\S+', '', text)
+    text = re.sub(r'[^\w\s]', '', text)
+    doc = nlp(text)
+    tokens = [token.lemma_ for token in doc if not token.is_stop]
+    return " ".join(tokens)
+
+processed_text_spacy = preprocess_text_spacy(sample_text)
+print(f"Processed text (spaCy): {processed_text_spacy}") 
+Illustrative Python for Lexicon-based (VADER):
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+nltk.download('vader_lexicon')
+
+analyzer = SentimentIntensityAnalyzer()
+
+def get_sentiment_vader(text):
+    vs = analyzer.polarity_scores(text)
+    # You can interpret the 'compound' score for overall sentiment
+    if vs['compound'] >= 0.05:
+        return 'Positive'
+    elif vs['compound'] <= -0.05:
+        return 'Negative'
+    else:
+        return 'Neutral'
+
+sample_text = "This is a fantastic day!"
+sentiment = get_sentiment_vader(sample_text)
+print(f"Sentiment of '{sample_text}': {sentiment}")
+
+sample_text_neg = "I am feeling really down today."
+sentiment_neg = get_sentiment_vader(sample_text_neg)
+print(f"Sentiment of '{sample_text_neg}': {sentiment_neg}")
+
